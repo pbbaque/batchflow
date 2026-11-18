@@ -1,0 +1,7 @@
+# Documentation build products; keep the reviewed master PDF available.
+tmp/
+output/pdf/*.aux
+output/pdf/*.log
+output/pdf/*.out
+output/pdf/*.toc
+docs/latex/texput.log
