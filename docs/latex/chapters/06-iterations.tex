@@ -1,0 +1,39 @@
+\chapter{Iteraciones y primer desarrollo}
+\section{Orden por riesgo y recorrido funcional}
+El plan no fija una duración total sin validar contratos, alcance y ritmo. Cada iteración puede dividirse en tareas menores y dejar decisiones pendientes explícitas. No se generan todos los microservicios antes de comprobar el primer recorrido.
+
+\begin{longtable}{L{0.11\textwidth}L{0.37\textwidth}L{0.41\textwidth}}
+\textbf{Vuelta} & \textbf{Incremento} & \textbf{Riesgo y aceptación principal}\\\hline
+I0 & Documentación base y herramientas de desarrollo en Docker. & Versiones e imágenes compatibles; primer contenedor Maven capaz de ejecutar tests; sin exigir JDK, Node o GnuCOBOL locales.\\
+I1 & Importes y primera decisión de liquidación con contrato COBOL. & Precisión exacta, tests unitarios y ejecutable real para una instrucción aceptada/rechazada.\\
+I2 & Persistencia de la instrucción y apuntes en liquidación. & Atomicidad, idempotencia y concurrencia con PostgreSQL real. API mínima comprobable.\\
+I3 & Primer recorrido Angular--API--COBOL--persistencia. & Una operación visible y trazable; autorización básica y errores del proceso.\\
+I4 & Outbox, Kafka y servicio de auditoría. & Recuperación tras fallos y eventos repetidos sin duplicidad lógica.\\
+I5 & Lotes y recuperación parcial. & Varias instrucciones, rechazos parciales y reejecución sin volver a aplicar lo confirmado.\\
+I6 & Servicio de conciliación y batch COBOL. & Comparación con fuente independiente y resultado reproducible a un punto de corte.\\
+I7 & Seguridad, observabilidad y entrega reproducible. & Roles efectivos, correlación, pruebas E2E y documentación fiel a lo ejecutable.\\
+\end{longtable}
+
+La seguridad no se ignora hasta I7: sus controles se introducen al exponer interfaces, y esa última vuelta comprueba el conjunto. Lo mismo ocurre con tests, logging y documentación, presentes en cada vuelta.
+
+\section{Primer bloque de código: importes}
+Después de verificar las imágenes y preparar el módulo Maven mínimo de \code{settlement-service}, el alumno implementará un objeto de valor monetario y sus tests. Maven y JUnit se ejecutarán en un contenedor de herramientas; no requiere arrancar Spring, PostgreSQL, Kafka ni Angular para comprobar sus reglas.
+
+Requisitos de aceptación del primer bloque:
+\begin{enumerate}
+\item Mantener inmutabilidad y EUR como moneda del alcance inicial.
+\item Representar 0.00 y 25.10 exactamente, usando \code{BigDecimal} sin paso por \code{double}.
+\item Normalizar 1.230 a dos decimales sin cambiar el valor; rechazar 1.231 si requiere redondear.
+\item Rechazar valores negativos y superiores a la capacidad acordada.
+\item Comparar valores monetarios por su significado, no confundir escalas redundantes con importes distintos.
+\item Definir pruebas de cada límite antes de dar la implementación por correcta.
+\end{enumerate}
+
+Cero es válido como valor monetario; la regla de que una instrucción debe ser positiva pertenece al caso de uso. La primera revisión distinguirá ambas responsabilidades. Mockito no es necesario para este objeto sin colaboradores: se incorporará al probar el caso de uso y sus puertos.
+
+Este texto contiene requisitos, no la solución ni tests implementados por el tutor. Los nombres y la API se proponen por el alumno y se revisan antes de extender el dominio.
+
+\section{Retroalimentación tras cada bloque}
+El alumno comparte su intento y los comandos/resultados. El tutor identifica primero fallos de corrección y después mejoras de diseño, sin ampliar el alcance como requisito oculto. Si aparece una incertidumbre de arquitectura, se registra y se decide con una prueba acotada.
+
+La siguiente tarea se elige según la evidencia, no por la necesidad de completar un temario. Las lecciones COBOL anteriores permanecen como consulta y se refuerzan dentro de los contratos, lectores y procesadores del proyecto.

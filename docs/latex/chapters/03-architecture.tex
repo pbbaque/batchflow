@@ -1,0 +1,53 @@
+\chapter{Arquitectura y propiedad de datos}
+\section{Límites de servicio}
+\begin{longtable}{L{0.30\textwidth}L{0.62\textwidth}}
+\textbf{Componente} & \textbf{Responsabilidad}\\\hline
+\code{settlement-service} & Participantes, cuentas internas, lotes, instrucciones, ejecución, apuntes, saldo, idempotencia y outbox. Único propietario de efectos monetarios.\\
+\code{reconciliation-service} & Extractos de referencia, ejecuciones de conciliación, discrepancias y resultados. No autoriza retiradas ni modifica saldos.\\
+\code{audit-service} & Consumo de eventos, deduplicación y línea temporal de auditoría consultable. No es el ledger.\\
+\code{api-gateway} & Entrada HTTP, enrutamiento y controles transversales. Sin reglas monetarias.\\
+Angular & Consola de lotes, instrucciones, ejecuciones, conciliación y auditoría.\\
+Identidad OIDC & Autenticación y roles; los servicios también validan tokens y autorización.\\
+\end{longtable}
+
+Cada servicio de negocio tiene su propia base lógica y credenciales. Una instancia PostgreSQL puede alojarlas en desarrollo, sin permitir consultas o escrituras cruzadas como mecanismo de integración.
+
+\section{Recorrido principal}
+\begin{enumerate}
+\item Angular envía un comando autenticado a través del gateway.
+\item Liquidación valida el contrato y persiste la solicitud o el lote.
+\item Un caso de uso prepara el contexto y ejecuta el motor COBOL mediante un adaptador.
+\item Java confirma la decisión y los efectos, comprobando que las versiones monetarias siguen vigentes.
+\item La transacción también guarda el evento en outbox.
+\item Un publicador entrega el evento a Kafka. Auditoría lo consume y lo conserva para consultas.
+\item Angular consulta el resultado y la auditoría; la llegada de esta última puede ser posterior a la confirmación monetaria.
+\end{enumerate}
+
+Los detalles de asincronía de ejecución y el contrato HTTP se concretarán al construir el primer recorrido. No se mantendrá una transacción de base de datos abierta durante toda la duración de un proceso COBOL sin analizar su coste.
+
+\section{Organización interna}
+En cada servicio se separan dominio, casos de uso y adaptadores. Los casos de uso dependen de puertos para persistencia, reloj, identificadores y ejecución COBOL. Los adaptadores implementan esos puertos. Esta separación facilita probar reglas y orquestación sin arrancar todo el sistema.
+
+No se creará un framework genérico ni una biblioteca compartida con todas las entidades de los servicios. Los contratos públicos se versionarán; compartir tipos no debe convertir las bases y dominios en un único modelo distribuido.
+
+\section{Transacciones y concurrencia}
+Cargo, abono, apuntes, decisión e inserción outbox pertenecen a una transacción local de liquidación. No se distribuyen entre servicios distintos. El ledger utilizará apuntes equilibrados por moneda; el saldo mantenido debe verificarse contra ellos.
+
+La estrategia inicial propuesta es control optimista: leer contexto y versiones, calcular, y confirmar condicionalmente sobre esas versiones. Un conflicto exige reevaluación o respuesta de concurrencia, con reintentos acotados. Dos operaciones no pueden confirmar decisiones independientes sobre el mismo saldo antiguo. Se comprobará con PostgreSQL real.
+
+\section{Responsabilidad de COBOL}
+El motor de liquidación valida reglas y calcula resultados sin modificar directamente las bases de los microservicios. El conciliador compara entradas coherentes y produce diferencias y totales. Java conserva la responsabilidad de confirmación, autorización, concurrencia y publicación fiable.
+
+Inicialmente, el motor será un ejecutable versionado junto al servicio que lo invoca. No necesita ser un microservicio por el solo hecho de usar otro lenguaje. Los procesos tendrán entrada y salida estructuradas, códigos de terminación, timeout, límites de concurrencia y aislamiento de archivos.
+
+La aplicación se desarrolla, compila, prueba y ejecuta mediante contenedores Linux. WSL puede ser el soporte de Docker Desktop, pero los servicios no invocarán wsl.exe ni ejecutables instalados en Windows. Java y el motor COBOL asociado se empaquetan en la misma imagen del servicio; la compilación separa etapas y conserva las bibliotecas nativas necesarias en ejecución. El capítulo de contenerización detalla redes, persistencia, herramientas y pruebas. Esta decisión aún no está implementada.
+
+\section{Kafka y auditoría}
+Se utiliza outbox para evitar publicar un evento y confirmar datos como dos acciones independientes sin recuperación. La publicación puede repetirse; cada evento tiene identidad estable y el consumidor deduplica al persistir.
+
+La deduplicación y el registro de auditoría se confirman juntos. El reconocimiento del consumo se hace después de esa persistencia; una caída intermedia puede generar una nueva entrega, que debe ser inocua. El orden solo se garantiza dentro de una partición; la clave y la versión de entidad se decidirán para cada flujo.
+
+Kafka transporta eventos y permite retención y reproducción según su configuración. No sustituye la persistencia de consulta de auditoría ni garantiza por sí solo inmutabilidad frente a administradores o cumplimiento normativo.
+
+\section{Conciliación independiente}
+La entrada interna debe identificar un punto de corte estable del ledger. La referencia externa será un extracto de prueba independiente, no otra proyección generada del mismo evento que se intenta comprobar. Se distinguirán coincidencia, ausencia en una fuente, duplicidad y diferencia de importe. Formato, reglas de emparejamiento y cierre se fijarán en su iteración.

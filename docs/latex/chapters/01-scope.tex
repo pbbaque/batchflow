@@ -1,0 +1,34 @@
+\chapter{Propósito, alcance y lenguaje común}
+\section{Producto}
+BatchFlow es una consola operativa para importar lotes de instrucciones, liquidar transferencias internas entre cuentas de participantes y conciliar el resultado contra una referencia independiente. Su diferenciación respecto de Ledgerly es el procesamiento batch, la integración COBOL y la trazabilidad de ejecuciones, no una nueva interfaz de banca minorista.
+
+\textbf{Liquidar} significa ejecutar una instrucción válida y confirmar sus efectos monetarios. \textbf{Conciliar} significa comparar registros internos con una fuente de referencia independiente, identificar coincidencias y explicar discrepancias.
+
+\section{Alcance inicial}
+\begin{itemize}
+\item Participantes y cuentas internas de liquidación en EUR, con fondos iniciales de prueba trazables.
+\item Importación y validación de lotes, seguimiento de instrucciones y consulta de resultados.
+\item Ejecución Java--COBOL, confirmación transaccional de los efectos e idempotencia persistente.
+\item Eventos Kafka y auditoría consultable desde Angular.
+\item Conciliación de una instantánea interna con un extracto de referencia de prueba.
+\item Autenticación, autorización, pruebas automatizadas y ejecución local reproducible por etapas.
+\end{itemize}
+
+Quedan fuera de la primera entrega: conexión a redes de pago, dinero real, cambio de moneda, cumplimiento normativo acreditado, Kubernetes y despliegue multirregión. No se afirmará una garantía de producción que no haya sido diseñada y verificada.
+
+\section{Conceptos del dominio}
+\begin{description}
+\item[Participante.] Organización ficticia propietaria de una o más cuentas internas. No es una identidad de acceso de un operador.
+\item[Cuenta de liquidación.] Identificador, moneda, estado, saldo y versión de concurrencia. Su propietario monetario es el servicio de liquidación.
+\item[Instrucción.] Orden identificable de transferir un importe de una cuenta a otra; conserva referencia externa, decisión y trazabilidad.
+\item[Lote.] Conjunto de instrucciones y contexto de importación. Su resultado resume decisiones individuales; no implica atomicidad de todo el fichero.
+\item[Asiento y apuntes.] Registro equilibrado de los efectos de una instrucción. Las correcciones se expresan mediante reversiones, sin editar destructivamente los apuntes confirmados.
+\item[Conciliación.] Ejecución con punto de corte, entrada de referencia y resultado reproducible de coincidencias y diferencias.
+\end{description}
+
+\section{Invariantes de partida}
+Cada instrucción confirmada aplica conjuntamente cargo, abono, apuntes y evento pendiente de publicar. Ningún rechazo de negocio modifica el dinero. Un reintento equivalente no vuelve a aplicarse; reutilizar su clave con un contenido diferente es un conflicto.
+
+El dinero no desaparece ni se crea en una transferencia interna. El saldo debe ser consistente con los apuntes y no puede hacerse negativo en este primer alcance. Las fuentes y contrapartidas de los fondos iniciales serán explícitas en los datos de prueba.
+
+Un lote admite rechazos parciales. Un fallo posterior no revierte silenciosamente instrucciones ya liquidadas: la recuperación se apoya en sus estados e idempotencia. El modelo detallado de estados se fijará en la iteración correspondiente.

@@ -1,0 +1,54 @@
+\documentclass[11pt,a4paper,oneside]{report}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[spanish,es-nodecimaldot,es-noquoting]{babel}
+\usepackage[a4paper,margin=25mm,headheight=14pt]{geometry}
+\usepackage{array,longtable}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\definecolor{brand}{RGB}{20,65,88}
+\hypersetup{colorlinks=true,linkcolor=brand,urlcolor=brand,pdftitle={BatchFlow: arquitectura y plan de desarrollo},pdfauthor={Proyecto BatchFlow}}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+\setlength{\emergencystretch}{3em}
+\renewcommand{\arraystretch}{1.2}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcommand{\code}[1]{\texttt{\detokenize{#1}}}
+\newcommand{\decision}[1]{\textbf{Estado:} #1\par}
+\setcounter{tocdepth}{1}
+\begin{document}
+\hypersetup{pageanchor=false}
+\begin{titlepage}
+\vspace*{18mm}
+{\Huge\bfseries\color{brand} BatchFlow\par}
+\vspace{8mm}
+{\Large Plataforma de liquidación batch\par y conciliación\par}
+\vspace{10mm}
+{\large Java \textperiodcentered\ COBOL \textperiodcentered\ Kafka \textperiodcentered\ Angular\par}
+\vspace{18mm}
+{\LARGE Arquitectura y plan de desarrollo\par}
+\vspace{6mm}
+Documento maestro de trabajo y aprendizaje\par
+Versión 0.2 --- 18 de noviembre de 2026\par
+\vfill
+\textbf{Situación real}\par
+Documentación inicial. Implementación del nuevo proyecto sin iniciar.\par
+Las decisiones propuestas se contrastarán con pruebas y se revisarán por iteraciones.\par
+\vspace{7mm}
+Proyecto independiente de Ledgerly. El entorno local GnuCOBOL no equivale a un mainframe de producción.\par
+\end{titlepage}
+\hypersetup{pageanchor=true}
+\pagenumbering{roman}
+\tableofcontents
+\clearpage
+\pagenumbering{arabic}
+\input{chapters/01-scope}
+\input{chapters/02-working-method}
+\input{chapters/03-architecture}
+\input{chapters/08-containerization}
+\input{chapters/04-contracts}
+\input{chapters/05-testing}
+\input{chapters/06-iterations}
+\input{chapters/07-decisions-progress}
+\end{document}

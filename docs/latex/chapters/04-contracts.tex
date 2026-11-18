@@ -1,0 +1,40 @@
+\chapter{Contratos y garantías}
+\section{Importes}
+Propuesta inicial para importes y saldos: EUR, valor no negativo, dos decimales y capacidad decimal total de 12 dígitos, con máximo \code{9999999999.99}. Java empleará \code{BigDecimal}; PostgreSQL, \code{NUMERIC(12,2)}; COBOL podrá representar el mismo dominio mediante \code{PIC 9(10)V99} o doce dígitos de céntimos enteros. La elección de intercambio se cerrará antes de implementar el adaptador.
+
+El signo contable se expresa mediante el sentido del apunte, no aceptando importes negativos arbitrarios de una transferencia. El valor monetario cero es representable; la instrucción exige un importe estrictamente positivo. Los totalizadores de lotes necesitan una capacidad propia, mayor si procede, y no reutilizarán sin análisis el límite por operación.
+
+Se normalizan ceros decimales redundantes sin cambiar valor, como \code{1.230} a \code{1.23}. Se rechaza una entrada como \code{1.231} que necesitaría redondeo para caber en dos decimales. No se usa \code{double} como paso intermedio ni se redondea dinero de entrada silenciosamente.
+
+\section{HTTP}
+Los importes viajan como cadenas decimales con punto, por ejemplo \code{"25.00"}. Las fechas técnicas usan un formato explícito y zona horaria; los identificadores se tratan como identificadores, no como cantidades. Se distinguirán validación de petición, conflicto de idempotencia, rechazo de negocio y fallo técnico. Los endpoints, códigos HTTP y esquema de errores se definirán como OpenAPI al construir el primer caso de uso.
+
+Una orden aceptada para procesar no equivale a una instrucción liquidada. Si el procesamiento es asíncrono, la respuesta y la consulta de estado deben expresar esa diferencia.
+
+\section{Idempotencia}
+La clave tiene un ámbito definido, propuesto como participante emisor y referencia externa. Se conserva una representación o huella canónica de los datos relevantes. Misma clave y contenido equivalente devuelve el resultado conocido o el estado en curso; misma clave con contenido diferente produce conflicto. Una restricción persistente y pruebas concurrentes respaldarán el comportamiento.
+
+Un reintento técnico no genera una nueva identidad monetaria. Una reversión sí es una nueva operación que referencia a la original. La identidad de evento tampoco se regenera en cada intento de publicación.
+
+\section{Java--COBOL}
+Se definirán versión, codificación, terminadores, orden y tamaño de campos, signo, escala, límites, identificador de solicitud y motivos de rechazo. Los datos estructurados se separan de los logs. Los fallos técnicos deben producir código no cero; un rechazo de negocio expresado correctamente es un resultado procesado, con un estado de negocio distinto de éxito monetario.
+
+Cada ejecución usa rutas o canales aislados. Se verifican fichero ausente, registro incompleto, tamaño excedido, caracteres inválidos, cierre y falta de respuesta. El timeout debe detener el trabajo real, no solo abandonar la espera del lanzador. No se procesará un resultado de otra ejecución por reutilizar nombres temporales.
+
+El anterior contrato de simulación V1 de cuatro líneas no es un contrato aprobado de BatchFlow. Los formatos definitivos se diseñarán con fixtures y pruebas, conservando la distinción entre valor numérico, almacenamiento y presentación.
+
+\section{Eventos de auditoría}
+La cabecera mínima propuesta separa:
+\begin{itemize}
+\item Identidad y esquema: \code{eventId}, \code{eventType} y \code{schemaVersion}.
+\item Entidad y orden lógico: \code{aggregateId} y \code{aggregateVersion}.
+\item Contexto: \code{occurredAt}, \code{correlationId} y actor cuando corresponda.
+\end{itemize}
+El contenido incluye los datos mínimos para explicar la decisión, evitando secretos y datos personales innecesarios.
+
+Los consumidores tolerarán entrega repetida y evolucionarán de forma compatible. Los nombres de topics, claves, retención, permisos y política ante eventos inválidos se cerrarán antes de introducir Kafka. La garantía de exactamente una vez de Kafka no se extiende automáticamente a una escritura en PostgreSQL.
+
+\section{Estados y recuperación}
+La instrucción debe distinguir recepción, ejecución, liquidación, rechazo y fallo técnico. El modelo definitivo aclarará qué estados son terminales y cuáles permiten reintento. Un timeout después de confirmar en base de datos no debe permitir aplicar de nuevo una operación cuyo cliente desconoce el resultado.
+
+El lote muestra contadores y estados derivados sin ocultar instrucciones pendientes. Un fallo de publicación de auditoría no convierte una instrucción monetariamente confirmada en rechazada: se recupera la publicación desde outbox.

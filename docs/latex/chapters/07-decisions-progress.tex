@@ -1,0 +1,47 @@
+\chapter{Decisiones, riesgos y seguimiento}
+\section{Registro inicial de decisiones}
+\begin{longtable}{L{0.10\textwidth}L{0.47\textwidth}L{0.32\textwidth}}
+\textbf{ID} & \textbf{Decisión} & \textbf{Estado y motivo}\\\hline
+D01 & Nombre BatchFlow, proyecto nuevo y separado de Ledgerly. & Confirmado por el alumno.\\
+D02 & Microservicios Java, COBOL y frontend Angular; Kafka para auditoría. & Confirmado por el alumno.\\
+D03 & Liquidación, conciliación y auditoría como servicios de negocio; cuentas y apuntes dentro de liquidación. & Base de arquitectura, revisable al modelar casos. Protege atomicidad local.\\
+D04 & EUR, escala 2 y máximo 9999999999.99 por importe/saldo. & Propuesta técnica para cerrar antes del primer código de importes.\\
+D05 & Outbox y consumidores idempotentes. & Base de fiabilidad; no promete exactamente una vez sobre Kafka y PostgreSQL.\\
+D06 & Arquitectura por puertos y adaptadores, con monorepo para el aprendizaje inicial. & Propuesta organizativa. No implica bases de datos compartidas.\\
+D07 & Iteraciones por recorrido funcional con revisión de riesgos y tests desde el inicio. & Método propuesto a partir de la petición de retroalimentación.\\
+D08 & Documento maestro LaTeX con capítulos como fuente canónica. & Solicitado por el alumno; sin duplicar capítulos en Markdown.\\
+D09 & Desarrollo, compilación, tests e infraestructura en contenedores Linux, con Docker Compose. & Confirmado por el alumno; diseño documentado, implementación pendiente.\\
+\end{longtable}
+
+Un cambio relevante registra contexto, alternativas, decisión y consecuencias. Cuando el detalle lo justifique se extraerá un ADR específico, que este maestro incluirá o referenciará. No se escriben ADR de decisiones triviales ni se oculta una decisión pendiente bajo apariencia de certeza.
+
+\section{Riesgos y mitigación}
+\begin{description}
+\item[Java--COBOL.] La entrada/salida y las rutas aún no se han probado en el nuevo sistema. Mitigación: primer contrato pequeño y ejecución del binario real antes de multiplicar servicios.
+\item[Consistencia monetaria.] Un cálculo sobre saldo antiguo puede ser inválido al confirmar. Mitigación: versiones y tests concurrentes contra PostgreSQL.
+\item[Doble escritura.] Un commit puede ocurrir sin publicación Kafka. Mitigación: outbox persistida conjuntamente y publicador recuperable.
+\item[Redelivery.] El consumidor puede recibir de nuevo un evento confirmado en su base. Mitigación: identidad estable y deduplicación transaccional.
+\item[Conciliación falsa.] Comparar fuentes derivadas del mismo dato no prueba corrección. Mitigación: referencia independiente y punto de corte.
+\item[Exceso de alcance.] Arrancar infraestructura sin un caso real ralentiza el aprendizaje. Mitigación: incrementar por recorridos, conservando el diseño de destino.
+\end{description}
+
+\section{Estado verificado al crear este documento}
+Se conservan los ejercicios COBOL anteriores. La lectura de primera línea fue revisada; el ejercicio completo de clientes sigue pendiente. BatchFlow no tiene aplicaciones ni tests implementados todavía.
+
+Inventario observado: GnuCOBOL 3.2.0, JDK 23, Node 22.23.3 y npm 11.11.1. La compatibilidad de las dependencias nuevas se verificará antes de generar aplicaciones. El material del intensivo COBOL se conserva separado del proyecto; sus contratos de simulación no son especificaciones vigentes de BatchFlow.
+
+\section{Próximo cierre}
+Revisar D04, comprobar Docker Engine y Compose, seleccionar imágenes compatibles y preparar el contenedor de herramientas y módulo Maven mínimos para el primer test de importes. El tutor guía; el alumno implementa. No se han creado microservicios, descargado dependencias ni realizado commits en esta fase de documentación.
+
+\section{Referencias y material previo}
+\begin{itemize}
+\item \href{https://kafka.apache.org/41/design/design/}{Apache Kafka: diseño y semánticas de entrega}.
+\item \href{https://www.postgresql.org/docs/current/tutorial-transactions.html}{PostgreSQL: transacciones}.
+\item \href{https://docs.spring.io/spring-cloud-gateway/reference/}{Spring Cloud Gateway}.
+\item \href{https://docs.junit.org/6.1.3/overview.html}{JUnit: Platform y Jupiter}.
+\item \href{https://site.mockito.org/}{Mockito: sitio y documentación del proyecto}.
+\item \href{https://java.testcontainers.org/modules/kafka/}{Testcontainers: módulo Kafka}.
+\item \href{https://gnucobol.sourceforge.io/doc/gnucobol.html}{Manual de GnuCOBOL}.
+\end{itemize}
+
+

@@ -1,0 +1,59 @@
+\chapter{Desarrollo y ejecución íntegros en Docker}
+\section{Decisión y alcance}
+El alumno ha establecido que todo el proyecto se desarrolle y ejecute en contenedores Docker. Se utilizarán contenedores Linux y Docker Compose. Las herramientas locales detectadas anteriormente son inventario, no requisitos para compilar o ejecutar BatchFlow. El host aporta Docker Engine accesible, Compose, Git y el editor; el navegador sigue siendo el cliente del frontend.
+
+También se prevén contenedores de herramientas para Maven/JDK, compilador GnuCOBOL, Node/Angular y LaTeX. No significa arrancar toda la infraestructura para cada test unitario: los perfiles y etapas separan herramientas de servicios de ejecución. Dockerfiles y Compose forman parte del aprendizaje y aún no están creados.
+
+\section{Imágenes y etapas de construcción}
+\begin{longtable}{L{0.30\textwidth}L{0.62\textwidth}}
+\textbf{Componente} & \textbf{Empaquetado previsto}\\\hline
+Servicios Java y gateway & Etapa Maven/JDK para compilar y probar; etapa final con runtime Java y artefactos necesarios.\\
+Servicios con COBOL & Compilación nativa en etapa compatible; ejecutable y bibliotecas GnuCOBOL en el runtime del mismo servicio Java.\\
+Angular & Node para dependencias, tests y build; servidor de desarrollo en su perfil y servidor HTTP de estáticos para la imagen de entrega.\\
+PostgreSQL, Kafka e identidad & Imágenes versionadas, configuración explícita y datos persistentes donde corresponda.\\
+Documentación & Imagen LaTeX versionada, fuentes montadas y PDF como salida; auxiliares en área temporal.\\
+\end{longtable}
+
+Los builds multietapa permiten excluir compiladores y cachés innecesarios de las imágenes de ejecución. Se comprobará la compatibilidad de bibliotecas nativas: copiar un ejecutable COBOL no garantiza que funcione en una distribución distinta. El contenedor del servicio ejecuta directamente el binario Linux; no invoca wsl.exe. Un proceso hijo COBOL forma parte de ese servicio, no es otro microservicio por usar un lenguaje diferente.
+
+Las versiones concretas y las familias de imágenes se elegirán y registrarán antes de implementar. No se utilizará una etiqueta flotante latest como definición de un entorno reproducible.
+
+\section{Compose, redes y disponibilidad}
+La composición tendrá perfiles o configuraciones separadas para desarrollo, pruebas y ejecución de la aplicación. Los contenedores se localizarán por nombres de servicio y puertos internos, no mediante localhost del host. Los puertos publicados se limitarán a los necesarios para navegador, identidad y diagnóstico local documentado.
+
+El navegador no resuelve nombres privados de Compose. La URL pública de la API será accesible desde el host, con proxy de desarrollo o enrutamiento del frontend/gateway para evitar confundir direcciones internas y externas. Kafka e identidad tendrán endpoints coherentes con cada cliente; advertised listeners e issuer OIDC se validarán en una prueba de conexión.
+
+Se definirán healthchecks y dependencias por disponibilidad. depends\_on por sí solo ordena el arranque, pero no garantiza que la base de datos o Kafka estén listos. Las aplicaciones también deben recuperarse de una dependencia que se caiga después del arranque; no se sustituye resiliencia por sleeps fijos.
+
+\section{Persistencia y configuración}
+Los datos duraderos de PostgreSQL, Kafka y el proveedor de identidad utilizarán volúmenes nombrados. Las cuentas de base de datos siguen separadas por servicio. Los archivos temporales Java--COBOL se aíslan por ejecución y se limpian según una política explícita; no se confunden con el almacenamiento duradero de un lote.
+
+Configuración no sensible y ejemplos se versionan; secretos reales, archivos locales de entorno y credenciales no se incluyen en Git ni en capas de imagen. Se prevé Compose secrets con permisos por servicio. Debe documentarse que su archivo fuente local también necesita protección: no constituye por sí solo una bóveda de secretos cifrada.
+
+Las imágenes de aplicación ejecutarán con usuario sin privilegios cuando sea posible y escribirán únicamente en rutas previstas. Los logs irán a stdout/stderr, con correlación; la respuesta estructurada de COBOL conservará su canal definido.
+
+\section{Desarrollo, tests y acceso al daemon}
+El alumno editará fuentes desde el host y ejecutará compiladores y tests en contenedores. Cachés de Maven y dependencias de Node se ubicarán en volúmenes de herramientas, sin incorporar node\_modules ni target al repositorio. Se controlarán permisos de los archivos generados y se podrán exponer puertos de depuración solo en desarrollo.
+
+Los unit tests no requieren PostgreSQL ni Kafka. Para integración se usarán dependencias reales, con Testcontainers cuando proceda. Ejecutar Testcontainers desde un runner en contenedor exige acceso explícito a un daemon Docker y conectividad hacia los contenedores creados. Esa configuración se limitará al runner de pruebas; ningún servicio de aplicación necesita acceso al socket Docker. Se validará antes de afirmar que los tests de integración están listos.
+
+Se puede disponer de una composición de integración con dependencias explícitas para pruebas que no usen Testcontainers. No se presentará un mock de Kafka o de PostgreSQL como evidencia equivalente a esa integración.
+
+\section{Pruebas de aceptación de la contenerización}
+\begin{enumerate}
+\item Desde un clon limpio, ejecutar el test de importes en el contenedor de herramientas sin JDK/Maven locales.
+\item Compilar COBOL y ejecutar una prueba real Java--COBOL dentro de su runtime Linux.
+\item Levantar la composición con healthchecks; completar una operación desde el navegador con URLs correctas.
+\item Reiniciar servicios sin perder datos duraderos y observar recuperación ante una dependencia temporalmente no disponible.
+\item Construir la imagen de Angular y generar el maestro PDF mediante contenedores de herramientas.
+\item Confirmar que Git no incluye secretos, cachés ni archivos de ejecución generados.
+\end{enumerate}
+
+Estos son criterios pendientes de implementación, no resultados ya obtenidos. El primer hito será el runner Maven; las imágenes restantes se incorporan cuando exista su incremento funcional. El desarrollo de Dockerfiles y Compose lo realiza el alumno, con revisión y pruebas del tutor.
+
+\section{Referencias de Docker}
+\begin{itemize}
+\item \href{https://docs.docker.com/build/building/multi-stage/}{Docker: builds multietapa}.
+\item \href{https://docs.docker.com/compose/how-tos/startup-order/}{Compose: disponibilidad y orden de arranque}.
+\item \href{https://docs.docker.com/compose/how-tos/use-secrets/}{Compose: secretos por servicio}.
+\end{itemize}

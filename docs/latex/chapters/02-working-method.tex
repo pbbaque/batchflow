@@ -1,0 +1,34 @@
+\chapter{Método iterativo y retroalimentación}
+\section{Espiral ligera, guiada por riesgos}
+Se utilizará desarrollo incremental por funcionalidades completas, con una revisión de riesgos inspirada en el modelo en espiral. No se realizará primero toda la arquitectura, luego todo el backend y finalmente todos los tests. Cada vuelta deja un comportamiento demostrable y evidencia de lo aprendido.
+
+\begin{enumerate}
+\item \textbf{Objetivo:} escribir el comportamiento observable y sus límites.
+\item \textbf{Riesgo:} elegir la incertidumbre más importante y, si hace falta, una prueba de concepto acotada.
+\item \textbf{Aceptación:} definir ejemplos normales, límites y fallos antes de la implementación.
+\item \textbf{Construcción:} el alumno implementa por pasos; las reglas apropiadas se trabajan con un ciclo test que falla, implementación y refactorización.
+\item \textbf{Revisión:} comprobar código, tests, comportamiento real y explicación del alumno.
+\item \textbf{Cierre:} registrar evidencia, decisión modificada y siguiente objetivo.
+\end{enumerate}
+
+\section{Formato de una iteración}
+Cada ficha contendrá identificador, objetivo, alcance excluido, riesgo principal, pruebas de aceptación, estimación, evidencia y decisión de cierre. Los estados serán pendiente, en curso, en revisión y completada. Un experimento fallido puede cerrar una incertidumbre sin completar la funcionalidad: ambas cosas se registran separadamente.
+
+Las tareas se dividen para obtener retroalimentación en bloques de aproximadamente 45 a 120 minutos. El alumno ha indicado una disponibilidad de al menos ocho horas diarias; se utiliza para planificar capacidad, no como tiempo ya transcurrido ni como obligación de llenar cada jornada. La disponibilidad semanal y las fechas de entrega siguen pendientes.
+
+\section{Criterio de terminado}
+\begin{itemize}
+\item Los casos de aceptación y los fallos relevantes tienen resultados verificados.
+\item Los tests comprueban comportamiento y pueden fallar ante una regresión significativa.
+\item No se pierden recursos, errores ni consistencia al ejecutar el caso.
+\item La documentación recoge los cambios de contrato o arquitectura, sin duplicar todo el código.
+\item El alumno puede explicar las decisiones y limitaciones del incremento.
+\end{itemize}
+
+\section{Mentoría y evaluación}
+El tutor enseña antes de evaluar, revisa archivos y propone pistas progresivas. El alumno implementa los ejercicios y casos de uso. No se generan sus soluciones completas salvo petición expresa después del intento. Los scaffolds o dependencias se acuerdan antes de crearlos o instalarlos; no se hacen commits automáticamente.
+
+La escala de aprendizaje se mantiene: 0 no iniciado, 1 superficial, 2 comprende ejemplos guiados, 3 resuelve ejercicios sencillos, 4 aplica autónomamente, 5 comprende, aplica y explica el alcance evaluado. Toda nota inferior a 5 identificará la evidencia concreta pendiente; el volumen de funcionalidades no decide la puntuación. Los simulacros de entrevista, si se retoman, se valoran por separado sobre 10.
+
+\section{Documentación viva}
+Este maestro y sus capítulos son la fuente canónica. Al cambiar una decisión se actualiza su estado y se conserva el motivo; no se crean dos versiones activas contradictorias. El código y sus pruebas tendrán prioridad para acreditar comportamiento implementado. Una propuesta escrita no se considera funcionalidad construida.

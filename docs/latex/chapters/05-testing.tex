@@ -1,0 +1,37 @@
+\chapter{Estrategia de pruebas y calidad}
+\section{Pruebas unitarias con JUnit Jupiter}
+Se prueban invariantes, límites y transiciones con objetos de dominio reales. Se utilizan tests parametrizados cuando varios ejemplos expresan la misma regla. Los nombres de tests, clases e identificadores se escriben en inglés; la explicación docente permanece en español.
+
+Los tests siguen preparar, ejecutar y comprobar. Cada uno debe poder detectar una regresión significativa, no copiar el algoritmo de producción ni limitarse a comprobar un constructor o un getter sin una regla real. El ciclo test que falla, implementación y refactorización se aplicará donde ayude a razonar el comportamiento.
+
+\section{Uso de Mockito}
+Mockito se emplea para controlar colaboradores: puertos de repositorio, reloj, generador de identificadores y motor COBOL. No se mockea la clase bajo prueba ni los importes para evitar evaluar sus invariantes. No se verifica cada llamada interna; se comprueban interacciones relevantes para el contrato, por ejemplo no persistir efectos monetarios ante un rechazo.
+
+Se practicarán stubbing, excepciones, capturas de argumentos, verificaciones y sus límites mediante casos reales. Un test Java que simula una respuesta de COBOL prueba la orquestación, pero no acredita la ejecución del binario.
+
+\section{Integración}
+Los tests se ejecutarán desde contenedores de herramientas. Se propone Testcontainers con PostgreSQL y Kafka reales. Se comprueban restricciones de unicidad, límites transaccionales, versiones de concurrencia, outbox, redelivery y deduplicación. No se sustituirá PostgreSQL por una base en memoria para afirmar que se ha comprobado su comportamiento de bloqueo o tipos.
+
+La ejecución COBOL se prueba con binario real y fixtures de contrato. Los importes, rechazos, estados de fichero, códigos de proceso y timeout se contrastan con resultados esperados explícitos. Las pruebas adversas del adaptador pueden utilizar un proceso controlado para simular bloqueo o salida inválida, identificándolo como tal.
+
+\section{Matriz mínima de aceptación}
+\begin{longtable}{L{0.36\textwidth}L{0.56\textwidth}}
+\textbf{Caso} & \textbf{Resultado observable}\\\hline
+Instrucción válida & Cargo y abono confirmados juntos; apuntes equilibrados y una decisión.\\
+Fondos insuficientes & Rechazo sin modificar saldos ni crear apuntes de transferencia.\\
+Reintento equivalente & No duplica dinero, asientos ni decisión monetaria.\\
+Clave reutilizada con otro contenido & Conflicto explícito; no aplica el segundo contenido.\\
+Concurrencia sobre un saldo & Ninguna doble disponibilidad ni actualización perdida.\\
+Fallo técnico COBOL & No confirma efectos parciales; diagnóstico y recuperación definidos.\\
+Caída entre commit y publicación & La outbox permite publicar después sin perder el evento.\\
+Evento duplicado & Una sola entrada lógica en la proyección de auditoría.\\
+Extracto con diferencia & Discrepancia trazable a registros, ejecución y punto de corte.\\
+\end{longtable}
+
+\section{Pruebas de interfaz y extremo a extremo}
+Angular prueba validación del formulario, estados de carga/error y presentación de resultados. Un conjunto pequeño de recorridos E2E verificará orden, resultado monetario persistido y llegada eventual de auditoría. No se exige que cada test arranque todos los servicios.
+
+Los tests asíncronos esperan una condición con límite temporal; no dependen de pausas arbitrarias. Cada caso controla sus datos e identidad de ejecución para evitar interferencias.
+
+\section{Evidencia y automatización}
+Cada incremento registra comando ejecutado, resultado y limitaciones. La integración continua compilará y ejecutará pruebas por niveles cuando exista código. Una métrica de cobertura ayuda a localizar huecos, pero no sustituye la matriz de riesgos ni constituye por sí sola el criterio de calidad.
