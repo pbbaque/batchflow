@@ -5,3 +5,8 @@ output/pdf/*.log
 output/pdf/*.out
 output/pdf/*.toc
 docs/latex/texput.log
+**/target/
+**/node_modules/
+.env
+.env.*
+!.env.example

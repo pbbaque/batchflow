@@ -1,0 +1,15 @@
+services:
+  maven:
+    image: batchflow/maven-tooling:dev
+    pull_policy: never
+    build:
+      context: .
+      dockerfile: infra/docker/maven.Dockerfile
+    profiles:
+      - tools
+    volumes:
+      - .:/workspace
+      - maven-cache:/root/.m2
+
+volumes:
+  maven-cache:
